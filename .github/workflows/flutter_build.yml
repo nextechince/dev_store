@@ -1,4 +1,4 @@
-name: devstore
+name: AppStore
 
 permissions:
   contents: write
@@ -133,7 +133,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: devstore-apk
+          name: appstore-apk
           path: build/app/outputs/apk/release/app-release.apk
 
       - name: Create Release
@@ -141,8 +141,8 @@ jobs:
         with:
           artifacts: "build/app/outputs/apk/release/app-release.apk"
           tag: v${{ github.run_number }}
-          name: "DEVSTORE v${{ github.run_number }}"
-          body: "DEVSTORE Android Release"
+          name: "APP STORE v${{ github.run_number }}"
+          body: "APP STORE Android Release"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
 
