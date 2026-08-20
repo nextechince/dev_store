@@ -84,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(l10n.register, style: Theme.of(context).textTheme.displaySmall),
                   const SizedBox(height: 8),
-                  Text('Create your DEVSTORE account',
+                  Text('Create your APP STORE account',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
                   const SizedBox(height: 24),
                   TextFormField(
