@@ -52,7 +52,7 @@ class AdminPanelApp extends StatelessWidget {
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, child) {
           return MaterialApp(
-            title: 'DEVSTORE Admin',
+            title: 'Aᴘᴘ Sᴛᴏʀᴇ Aᴅᴍɪɴ',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
