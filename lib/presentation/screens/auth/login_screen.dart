@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Welcome back to DEVSTORE',
+                    'Welcome back to App Store',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.textMuted,
                     ),
