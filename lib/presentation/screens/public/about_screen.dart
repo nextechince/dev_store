@@ -54,7 +54,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     // Fallback to "D" if logo not found
                     return const Center(
                       child: Text(
-                        'D',
+                        'A',
                         style: TextStyle(
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
@@ -68,7 +68,7 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'DEVSTORE',
+              'Aᴘᴘ Sᴛᴏʀᴇ',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class _AboutScreenState extends State<AboutScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '© 2026 DEVSTORE. All rights reserved.',
+              '© 2026 App Store. All rights reserved.',
               style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ],
