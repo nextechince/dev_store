@@ -67,7 +67,7 @@ class DevStoreApp extends StatelessWidget {
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, themeProvider, localeProvider, child) {
           return MaterialApp(
-            title: 'DEVSTORE',
+            title: 'Aᴘᴘ Sᴛᴏʀᴇ',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
