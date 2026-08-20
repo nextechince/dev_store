@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
               foregroundColor: Colors.white,
               centerTitle: false,
               title: Text(
-                'DEVSTORE',
+                'Aᴘᴘ Sᴛᴏʀᴇ',
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
               flexibleSpace: FlexibleSpaceBar(
