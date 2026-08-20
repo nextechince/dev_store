@@ -95,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen>
                             // Fallback to "D" if logo not found
                             return const Center(
                               child: Text(
-                                'D',
+                                'A',
                                 style: TextStyle(
                                   fontSize: 60,
                                   fontWeight: FontWeight.bold,
@@ -109,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 24),
                     const Text(
-                      'DEVSTORE',
+                      'Aᴘᴘ Sᴛᴏʀᴇ',
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
