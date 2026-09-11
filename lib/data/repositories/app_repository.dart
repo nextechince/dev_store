@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import '../models/app_model.dart';
 import '../models/review_model.dart';
 import '../models/report_model.dart';
@@ -8,7 +7,6 @@ import '../../core/services/storj_service.dart';
 
 class AppRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
   final StorjService _storjService = StorjService();
 
   // Create app (pending approval)
@@ -36,13 +34,15 @@ class AppRepository {
     }
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
-      query = query.where('name', isGreaterThanOrEqualTo: searchQuery)
-                   .where('name', isLessThanOrEqualTo: '$searchQuery\uf8ff');
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThanOrEqualTo: '$searchQuery\uf8ff');
     }
 
     return query.limit(limit).snapshots().map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
-      // Sort in Dart instead of Firestore
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
       apps.sort((a, b) {
         final aVal = _getSortValue(a, sortBy);
         final bVal = _getSortValue(b, sortBy);
@@ -76,7 +76,9 @@ class AppRepository {
         .limit(10)
         .snapshots()
         .map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
       apps.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return apps;
     });
@@ -90,8 +92,11 @@ class AppRepository {
         .limit(20)
         .snapshots()
         .map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
-      apps.sort((a, b) => (b.approvedAt ?? DateTime(1970)).compareTo(a.approvedAt ?? DateTime(1970)));
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
+      apps.sort((a, b) => (b.approvedAt ?? DateTime(1970))
+          .compareTo(a.approvedAt ?? DateTime(1970)));
       return apps;
     });
   }
@@ -104,7 +109,9 @@ class AppRepository {
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
       apps.sort((a, b) => b.downloadCount.compareTo(a.downloadCount));
       return apps;
     });
@@ -142,7 +149,9 @@ class AppRepository {
         .where('developerId', isEqualTo: developerId)
         .snapshots()
         .map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
       apps.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return apps;
     });
@@ -155,24 +164,34 @@ class AppRepository {
         .where('status', isEqualTo: AppConstants.statusPending)
         .snapshots()
         .map((snapshot) {
-      final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
+      final apps = snapshot.docs
+          .map((doc) => AppModel.fromFirestore(doc))
+          .toList();
       apps.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return apps;
     });
   }
 
-  // Approve app
+  // Approve app — now actually moves the file in Filebase
   Future<void> approveApp(String appId) async {
     final app = await getAppById(appId);
     if (app == null) return;
 
-    // Move file from pending to approved in Storj
     final newPath = app.storagePath.replaceFirst(
       AppConstants.pendingFolder,
       AppConstants.approvedFolder,
     );
 
-    // Update Firestore
+    final parts = app.storagePath.split('/');
+    if (parts.length >= 2) {
+      final bucket = parts[0];
+      final oldObject = parts.sublist(1).join('/');
+      final newObject = newPath.split('/').sublist(1).join('/');
+
+      // Move file in Filebase (copy + delete source)
+      await _storjService.copyFile(bucket, oldObject, newObject);
+    }
+
     await _firestore.collection(AppConstants.appsCollection).doc(appId).update({
       'status': AppConstants.statusApproved,
       'approvedAt': Timestamp.fromDate(DateTime.now()),
@@ -230,7 +249,6 @@ class AppRepository {
   Future<void> deleteApp(String appId) async {
     final app = await getAppById(appId);
     if (app != null) {
-      // Delete from Storj
       final parts = app.storagePath.split('/');
       if (parts.length >= 2) {
         final bucket = parts[0];
@@ -239,10 +257,8 @@ class AppRepository {
       }
     }
 
-    // Delete from Firestore
     await _firestore.collection(AppConstants.appsCollection).doc(appId).delete();
 
-    // Delete related reviews
     final reviews = await _firestore
         .collection(AppConstants.reviewsCollection)
         .where('appId', isEqualTo: appId)
@@ -260,7 +276,9 @@ class AppRepository {
         .where('appId', isEqualTo: appId)
         .snapshots()
         .map((snapshot) {
-      final reviews = snapshot.docs.map((doc) => ReviewModel.fromFirestore(doc)).toList();
+      final reviews = snapshot.docs
+          .map((doc) => ReviewModel.fromFirestore(doc))
+          .toList();
       reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return reviews;
     });
@@ -275,29 +293,31 @@ class AppRepository {
 
   // Delete review
   Future<void> deleteReview(String reviewId, String appId) async {
-    await _firestore.collection(AppConstants.reviewsCollection).doc(reviewId).delete();
+    await _firestore
+        .collection(AppConstants.reviewsCollection)
+        .doc(reviewId)
+        .delete();
     await updateAppRating(appId);
   }
 
-  // Search apps by name (case-insensitive contains search)
+  // Search apps by name
   Future<List<AppModel>> searchApps(String query) async {
     final snapshot = await _firestore
         .collection(AppConstants.appsCollection)
         .where('status', isEqualTo: AppConstants.statusApproved)
         .get();
 
-    final apps = snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
+    final apps =
+        snapshot.docs.map((doc) => AppModel.fromFirestore(doc)).toList();
 
-    // Filter in Dart for case-insensitive contains search
     final lowerQuery = query.toLowerCase();
     final filtered = apps.where((app) {
       return app.name.toLowerCase().contains(lowerQuery) ||
-             app.developerName.toLowerCase().contains(lowerQuery) ||
-             app.category.toLowerCase().contains(lowerQuery) ||
-             app.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+          app.developerName.toLowerCase().contains(lowerQuery) ||
+          app.category.toLowerCase().contains(lowerQuery) ||
+          app.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
     }).toList();
 
-    // Sort by relevance: name matches first, then others
     filtered.sort((a, b) {
       final aNameMatch = a.name.toLowerCase().startsWith(lowerQuery);
       final bNameMatch = b.name.toLowerCase().startsWith(lowerQuery);
@@ -311,7 +331,6 @@ class AppRepository {
 
   // ========== REPORTS ==========
 
-  /// Submit a report for an app (from the store app)
   Future<void> reportApp({
     required String appId,
     required String appName,
@@ -334,18 +353,18 @@ class AppRepository {
     });
   }
 
-  /// Get all reports (for admin panel)
   Stream<List<ReportModel>> getAllReports() {
     return _firestore
         .collection('reports')
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ReportModel.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => ReportModel.fromFirestore(doc))
+          .toList();
     });
   }
 
-  /// Get pending reports (for admin panel)
   Stream<List<ReportModel>> getPendingReports() {
     return _firestore
         .collection('reports')
@@ -353,12 +372,14 @@ class AppRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ReportModel.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => ReportModel.fromFirestore(doc))
+          .toList();
     });
   }
 
-  /// Resolve a report (for admin panel)
-  Future<void> resolveReport(String reportId, String resolvedBy, String resolution) async {
+  Future<void> resolveReport(
+      String reportId, String resolvedBy, String resolution) async {
     await _firestore.collection('reports').doc(reportId).update({
       'status': 'resolved',
       'resolvedAt': Timestamp.fromDate(DateTime.now()),
@@ -367,7 +388,6 @@ class AppRepository {
     });
   }
 
-  /// Dismiss a report (for admin panel)
   Future<void> dismissReport(String reportId, String dismissedBy) async {
     await _firestore.collection('reports').doc(reportId).update({
       'status': 'dismissed',
